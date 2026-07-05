@@ -1,0 +1,44 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: temurin
+      - uses: android-actions/setup-android@v3
+      - run: cd android && ./gradlew assembleRelease
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install openpyxl
+      - run: cd excel && python build_workbook.py
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            android/app/build/outputs/apk/release/app-release.apk
+            excel/EuroPath_Immigration_Explorer.xlsx
+          body: |
+            ## EuroPath ${{ github.ref_name }}
+
+            ### Downloads
+            - 📱 **Android APK** — install on Android 8.0+
+            - 📊 **Excel Workbook** — 12 sheets, 45 countries
+
+            ### Links
+            - Web app: https://europath.app
+            - API docs: https://api.europath.app/api/docs
+
+            > ⚠️ Always verify immigration info with official sources.
